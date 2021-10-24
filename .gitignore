@@ -1,2 +1,6 @@
-venv/
+# IDE
 .idea/
+
+# Python venv / generated files
+venv/
+__pycache__/
