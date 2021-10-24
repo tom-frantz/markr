@@ -4,7 +4,8 @@
 TODO
 
 ## Key Assumptions
-TODO
+- All (valid) results will have a test-id, student-number, and valid summary-marks; Assuming any of these are missing, then the test result will be considered invalid.
+- 
 
 ## Highlights
 TODO
