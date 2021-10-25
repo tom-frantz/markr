@@ -56,9 +56,7 @@ def get_marks(values: Import) -> Dict[ResultModelKey, McqTestResult]:
 
 def update_db_with_marks(marks: Dict[ResultModelKey, McqTestResult], db: Session):
     for key, results in marks.items():
-        student = (
-            db.query(Student).filter_by(student_number=key.student_number).first()
-        )
+        student = db.query(Student).filter_by(student_number=key.student_number).first()
 
         # Insert the student if not already present.
         if not student:
@@ -72,10 +70,32 @@ def update_db_with_marks(marks: Dict[ResultModelKey, McqTestResult], db: Session
             db.refresh(student)
 
         # See if there's an existing result (case where marked in another /import request)
-        result = db.query(Result).filter_by(student=student.student_number, test_id=key.test_id).first()
-        if result:
-            # TODO: handle conflicting results
-            pass
-        else:
-            # TODO: insert
-            pass
+        prev_result = (
+            db.query(Result)
+            .filter_by(student=student.student_number, test_id=key.test_id)
+            .first()
+        )
+
+        # Handle persisting the new results;
+        if not prev_result:
+            insert_result(results, db)
+        elif (
+            results.summary_marks.available > prev_result.available
+            or results.summary_marks.obtained > prev_result.obtained
+        ):
+            db.delete(prev_result)
+            db.commit()
+            insert_result(results, db)
+
+
+def insert_result(result, db):
+    db_result = Result(
+        student=result.student_number,
+        test_id=result.test_id,
+        available=result.summary_marks.available,
+        obtained=result.summary_marks.obtained,
+    )
+    db.add(db_result)
+    db.commit()
+    db.refresh(db_result)
+    return db_result

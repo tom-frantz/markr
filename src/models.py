@@ -21,4 +21,4 @@ class Result(Base):
     test_id = Column(String, primary_key=True, index=True)
 
     available = Column(Integer)
-    awarded = Column(Integer)
+    obtained = Column(Integer)

@@ -4,8 +4,8 @@ from pydantic import BaseModel, Field
 
 # pydantic's BaseModel's should handle extra fields with grace.
 class SummaryMarks(BaseModel):
-    available: str = Field(None, alias="@available")
-    obtained: str = Field(None, alias="@obtained")
+    available: int = Field(None, alias="@available")
+    obtained: int = Field(None, alias="@obtained")
 
 
 class McqTestResult(BaseModel):
