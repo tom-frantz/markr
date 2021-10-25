@@ -81,7 +81,9 @@ def import_microservice(data: Import):
     working_results: dict = {}
 
     for index, result in enumerate(data.test.mcq_test_results):
-        prev_marks = working_results.get(result.student_number)
+        result_id = (result.student_number, result.test_id)
+        
+        prev_marks = working_results.get(result_id)
         marks = result.summary_marks
 
         if result.student_number is None:
@@ -107,9 +109,9 @@ def import_microservice(data: Import):
                 marks.obtained > prev_marks.obtained
                 or marks.available > prev_marks.available
             ):
-                working_results[result.student_number] = marks
+                working_results[result_id] = marks
         else:
-            working_results[result.student_number] = marks
+            working_results[result_id] = marks
 
     # TODO: Impl persistence
 
