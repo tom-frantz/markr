@@ -1,4 +1,6 @@
 import json
+from typing import Dict, Tuple
+
 import xmltodict
 
 import uvicorn
@@ -7,7 +9,8 @@ from sqlalchemy.orm import Session
 
 from src import models
 from src.database import engine, SessionLocal
-from src.schema import Import, EmptyResponse
+from src.import_microservice import get_marks, ResultModelKey, update_db_with_marks
+from src.schema import Import, EmptyResponse, SummaryMarks
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -30,7 +33,6 @@ async def xml_to_json(request: Request, call_next):
         # Update request receive function and _json field, as well as associated headers to convert from xml to json
         xml_body = await request.body()
         parse = xmltodict.parse(xml_body, force_list=("mcq-test-result",))
-        print(parse)
         json_string = json.dumps(parse).encode("utf-8")
 
         async def receive():
@@ -67,42 +69,9 @@ async def xml_to_json(request: Request, call_next):
     response_model=EmptyResponse
 )
 def import_microservice(data: Import, db: Session = Depends(get_db)):
-    working_results: dict = {}
+    working_results: Dict[ResultModelKey, SummaryMarks] = get_marks(data)
 
-    for index, result in enumerate(data.test.mcq_test_results):
-        result_id = (result.student_number, result.test_id)
-
-        prev_marks = working_results.get(result_id)
-        marks = result.summary_marks
-
-        if result.student_number is None:
-            raise HTTPException(
-                status_code=400, detail=f"Result {index + 1}: Student number not found"
-            )
-
-        if result.test_id is None:
-            raise HTTPException(
-                status_code=400, detail=f"Result {index + 1}: Test ID not found"
-            )
-
-        if marks is None:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Result {index + 1}: Summary marks not found",
-            )
-
-        if prev_marks is not None:
-            # Handle cases where there's conflicting values in the one document.
-            # TODO: will have to handle persisted conflicting results.
-            if (
-                marks.obtained > prev_marks.obtained
-                or marks.available > prev_marks.available
-            ):
-                working_results[result_id] = marks
-        else:
-            working_results[result_id] = marks
-
-    # TODO: Impl persistence
+    update_db_with_marks(working_results, db)
 
     return {}
 
