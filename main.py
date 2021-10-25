@@ -1,39 +1,27 @@
 import json
-from collections import OrderedDict
-from typing import Any, Optional, List
+import xmltodict
 
 import uvicorn
-import xmltodict
-from fastapi import FastAPI, Request, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import FastAPI, Request, HTTPException, Depends
+from sqlalchemy.orm import Session
+
+from src import models
+from src.database import engine, SessionLocal
+from src.schema import Import, EmptyResponse
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 MARKR_CONTENT_TYPE = "text/xml+markr"
 
 
-# pydantic's BaseModel's should handle extra fields with grace.
-class SummaryMarks(BaseModel):
-    available: str = Field(None, alias="@available")
-    obtained: str = Field(None, alias="@obtained")
-
-
-class McqTestResult(BaseModel):
-    student_number: str = Field(None, alias="student-number")
-    test_id: str = Field(None, alias="test-id")
-    summary_marks: SummaryMarks = Field(None, alias="summary-marks")
-
-    # Add these as optional, good to have but not necessary.
-    scanned_on: Optional[str] = Field(None, alias="@scanned-on")
-    first_name: Optional[str] = Field(None, alias="first-name")
-    last_name: Optional[str] = Field(None, alias="last-name")
-
-
-class McqTestResultWrapper(BaseModel):
-    mcq_test_results: List[McqTestResult] = Field(None, alias="mcq-test-result")
-
-
-class Import(BaseModel):
-    test: McqTestResultWrapper = Field(None, alias="mcq-test-results")
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @app.middleware("http")
@@ -71,18 +59,19 @@ async def xml_to_json(request: Request, call_next):
     openapi_extra={
         "requestBody": {
             "content": {
-                "text/xml+markr": {"schema": Import.schema()},
+                "text/xml+markr": {"schema": EmptyResponse.schema()},
             },
             "required": True,
         },
     },
+    response_model=EmptyResponse
 )
-def import_microservice(data: Import):
+def import_microservice(data: Import, db: Session = Depends(get_db)):
     working_results: dict = {}
 
     for index, result in enumerate(data.test.mcq_test_results):
         result_id = (result.student_number, result.test_id)
-        
+
         prev_marks = working_results.get(result_id)
         marks = result.summary_marks
 
@@ -115,7 +104,7 @@ def import_microservice(data: Import):
 
     # TODO: Impl persistence
 
-    return
+    return {}
 
 
 if __name__ == "__main__":
