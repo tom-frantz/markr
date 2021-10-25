@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from src import models
 from src.database import engine, SessionLocal
 from src.import_microservice import get_marks, ResultModelKey, update_db_with_marks
-from src.schema import Import, EmptyResponse, SummaryMarks
+from src.schema import Import, EmptyResponse, SummaryMarks, McqTestResult
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -66,10 +66,10 @@ async def xml_to_json(request: Request, call_next):
             "required": True,
         },
     },
-    response_model=EmptyResponse
+    response_model=EmptyResponse,
 )
 def import_microservice(data: Import, db: Session = Depends(get_db)):
-    working_results: Dict[ResultModelKey, SummaryMarks] = get_marks(data)
+    working_results: Dict[ResultModelKey, McqTestResult] = get_marks(data)
 
     update_db_with_marks(working_results, db)
 

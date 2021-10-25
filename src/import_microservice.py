@@ -5,7 +5,9 @@ from typing import Dict
 
 from sqlalchemy.orm import Session
 
-from src.schema import Import, SummaryMarks
+from src.database import engine
+from src.schema import Import, McqTestResult
+from src.models import Student, Result
 
 
 @dataclass(frozen=True)
@@ -14,8 +16,8 @@ class ResultModelKey:
     test_id: str
 
 
-def get_marks(values: Import) -> Dict[ResultModelKey, SummaryMarks]:
-    working_results: Dict[ResultModelKey, SummaryMarks] = {}
+def get_marks(values: Import) -> Dict[ResultModelKey, McqTestResult]:
+    working_results: Dict[ResultModelKey, McqTestResult] = {}
 
     for index, result in enumerate(values.test.mcq_test_results):
         result_id = ResultModelKey(result.student_number, result.test_id)
@@ -41,18 +43,39 @@ def get_marks(values: Import) -> Dict[ResultModelKey, SummaryMarks]:
 
         if prev_marks is not None:
             # Handle cases where there's conflicting values in the one document.
-            # TODO: will have to handle persisted conflicting results.
             if (
-                marks.obtained > prev_marks.obtained
-                or marks.available > prev_marks.available
+                marks.obtained > prev_marks.summary_marks.obtained
+                or marks.available > prev_marks.summary_marks.available
             ):
-                working_results[result_id] = marks
+                working_results[result_id] = result
         else:
-            working_results[result_id] = marks
+            working_results[result_id] = result
 
     return working_results
 
 
-def update_db_with_marks(marks: Dict[ResultModelKey, SummaryMarks], db: Session):
-    print("MARKS", marks)
-    pass
+def update_db_with_marks(marks: Dict[ResultModelKey, McqTestResult], db: Session):
+    for key, results in marks.items():
+        student = (
+            db.query(Student).filter_by(student_number=key.student_number).first()
+        )
+
+        # Insert the student if not already present.
+        if not student:
+            student = Student(
+                student_number=key.student_number,
+                first_name=results.first_name,
+                last_name=results.last_name,
+            )
+            db.add(student)
+            db.commit()
+            db.refresh(student)
+
+        # See if there's an existing result (case where marked in another /import request)
+        result = db.query(Result).filter_by(student=student.student_number, test_id=key.test_id).first()
+        if result:
+            # TODO: handle conflicting results
+            pass
+        else:
+            # TODO: insert
+            pass
