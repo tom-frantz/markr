@@ -8,9 +8,10 @@ from fastapi import FastAPI, Request, HTTPException, Depends
 from sqlalchemy.orm import Session
 
 from src import models
+from src.analytics_microservice import calculate_analytics
 from src.database import engine, SessionLocal
 from src.import_microservice import get_marks, ResultModelKey, update_db_with_marks
-from src.schema import Import, EmptyResponse, SummaryMarks, McqTestResult
+from src.schema import Import, EmptyResponse, SummaryMarks, McqTestResult, Analytics
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -74,6 +75,11 @@ def import_microservice(data: Import, db: Session = Depends(get_db)):
     update_db_with_marks(working_results, db)
 
     return {}
+
+
+@app.get("/results/{test_id}/aggregate", response_model=Analytics)
+def analytics(test_id: str, db: Session = Depends(get_db)):
+    return calculate_analytics(test_id, db)
 
 
 if __name__ == "__main__":

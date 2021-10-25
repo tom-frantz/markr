@@ -30,3 +30,17 @@ class Import(BaseModel):
 class EmptyResponse(BaseModel):
     class Config:
         orm_mode = True
+
+
+# ANALYTICS
+class Analytics(BaseModel):
+    mean: float
+    count: float
+
+    p25: float
+    p50: float
+    p75: float
+
+    stddev: float
+    min: float
+    max: float
