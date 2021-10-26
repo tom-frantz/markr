@@ -1,6 +1,9 @@
 version: "3.9"  # optional since v1.27.0
 services:
   web:
+    # For running tests
+    # entrypoint: "python"
+    # command: "-m pytest tests -vv"
     build:
       context: ..
       dockerfile: docker/dockerfile
@@ -10,6 +13,8 @@ services:
       - postgres-markr
     environment:
       POSTGRES_HOST: "postgres-markr"
+    depends_on:
+      - postgres-markr
   postgres-markr:
     image: postgres:14
     volumes:

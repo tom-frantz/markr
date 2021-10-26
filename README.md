@@ -28,6 +28,11 @@ About the system:
 From the root directory (where this file is located)
 `docker-compose -f .\docker\docker-compose.yml up --build`
 
+### With tests
+Simply go into the docker compose file, and uncomment the two keys (`entrypoint` and `command`) under `web`
+Note: make sure they're on the same indent as all the other keys in the docker-compose file
+
+
 ## To run in debug mode
 - Install any python dependencies (virtualenv or otherwise) `pip install -r requirements.txt`
 - run `uvicorn main:app --reload` to run in debug mode
@@ -37,7 +42,5 @@ You'll likely need to make sure that you have a Postgres DB running on your loca
 - password: `postgres`
 
 
-
-This is much easier, yes
 
 p.s. I may have gotten a bit excited with this project, I was very eager to build something in FastAPI and it exceeded a lot of my expectations.

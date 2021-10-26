@@ -1,5 +1,7 @@
 fastapi==0.70.0
 uvicorn==0.15.0
 SQLAlchemy==1.4.26
-xmltodict
-psycopg2
+xmltodict==0.12.0
+psycopg2==2.9.1
+pytest==6.2.5
+requests==2.26.0
