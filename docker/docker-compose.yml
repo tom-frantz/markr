@@ -2,8 +2,8 @@ version: "3.9"  # optional since v1.27.0
 services:
   web:
     # For running tests
-    # entrypoint: "python"
-    # command: "-m pytest tests -vv"
+    #entrypoint: "python"
+    #command: "-m pytest tests -vv"
     build:
       context: ..
       dockerfile: docker/dockerfile
