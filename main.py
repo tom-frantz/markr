@@ -5,7 +5,9 @@ import xmltodict
 
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException, Depends
+from pyexpat import ExpatError
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 from src import models
 from src.analytics_microservice import calculate_analytics
@@ -33,7 +35,13 @@ async def xml_to_json(request: Request, call_next):
     if request.headers.get("Content-Type") == MARKR_CONTENT_TYPE:
         # Update request receive function and _json field, as well as associated headers to convert from xml to json
         xml_body = await request.body()
-        parse = xmltodict.parse(xml_body, force_list=("mcq-test-result",))
+        try:
+            parse = xmltodict.parse(xml_body, force_list=("mcq-test-result",))
+        except ExpatError as e:
+            return JSONResponse(
+                status_code=400,
+                content=f"Malformed XML: Line: {e.lineno}, Column: {e.offset}",
+            )
         json_string = json.dumps(parse).encode("utf-8")
 
         async def receive():
