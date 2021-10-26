@@ -3,6 +3,9 @@ from pydantic import BaseModel, Field
 
 
 # pydantic's BaseModel's should handle extra fields with grace.
+# IMPORT SCHEMA
+# These are derived from the XML structure.
+# The aliases are based on the xmltodict conversion functionality
 class SummaryMarks(BaseModel):
     available: int = Field(None, alias="@available")
     obtained: int = Field(None, alias="@obtained")

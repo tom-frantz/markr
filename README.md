@@ -13,6 +13,9 @@ Now, that XML and JSON mix-up. While the core functionality of the `/import` was
 
 The general approach was straight forward for the `results/:test_id/aggregate` GET endpoint, where it simply read the data from the database, and then performed metrics on it. Currently, this is done in a quite naive way where it will calculate the endpoint whenever it is called. In order to speed this up, the metrics calculations could be done whenever data is ingested at the `/import` endpoint, and persisted in the database. All that the `.../aggregate` endpoint would do is simply fetch from the DB and display the results. The reason I haven't done this is I was already pushing it for time, so I made a ticket in Jira and left it for another day when I had some free time.
 
+## Notes:
+The swagger docs `localhost/docs` will show the floats as integers, if you want to see them as floats, just call the endpoints directly
+
 ## Key Assumptions
 About the system: 
 - All (valid) results will have a test-id, student-number, and valid summary-marks; Assuming any of these are missing, then the test result will be considered invalid.

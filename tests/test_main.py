@@ -18,6 +18,7 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+# Overrides to use the test DB
 def override_get_db():
     try:
         db = TestingSessionLocal()

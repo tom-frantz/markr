@@ -22,6 +22,7 @@ def calculate_analytics(test_id: str, db: Session) -> Analytics:
 
     count = results.count()
 
+    # Assumption: Should just return all zeros if no records present.
     if count == 0:
         return Analytics(
             mean=0.0,
@@ -38,6 +39,7 @@ def calculate_analytics(test_id: str, db: Session) -> Analytics:
         float(100 * result.obtained / result.available) for result in results
     ]
 
+    # Assumption, stddev should be zero if only 1 record present (can't calculate)
     try:
         stddev = statistics.stdev(results_as_percent)
     except statistics.StatisticsError as e:
